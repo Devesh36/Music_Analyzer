@@ -128,10 +128,14 @@ async function spotifyRequest<T>(
  */
 export async function getTopArtists(
   limit: number = 20,
-  timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'
+  timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term',
+  clientId?: string,
+  clientSecret?: string
 ): Promise<any> {
   const data = await spotifyRequest(
-    `/me/top/artists?limit=${limit}&time_range=${timeRange}`
+    `/me/top/artists?limit=${limit}&time_range=${timeRange}`,
+    clientId,
+    clientSecret
   );
   return data;
 }
@@ -139,7 +143,11 @@ export async function getTopArtists(
 /**
  * Get audio features for multiple tracks
  */
-export async function getAudioFeatures(trackIds: string[]): Promise<any> {
+export async function getAudioFeatures(
+  trackIds: string[],
+  clientId?: string,
+  clientSecret?: string
+): Promise<any> {
   if (trackIds.length === 0) {
     return { audio_features: [] };
   }
@@ -152,7 +160,11 @@ export async function getAudioFeatures(trackIds: string[]): Promise<any> {
 
   const results = await Promise.all(
     chunks.map((chunk) =>
-      spotifyRequest(`/audio-features?ids=${chunk.join(',')}`)
+      spotifyRequest(
+        `/audio-features?ids=${chunk.join(',')}`,
+        clientId,
+        clientSecret
+      )
     )
   );
 
@@ -166,10 +178,14 @@ export async function getAudioFeatures(trackIds: string[]): Promise<any> {
  */
 export async function getTopTracks(
   limit: number = 50,
-  timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'
+  timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term',
+  clientId?: string,
+  clientSecret?: string
 ): Promise<any> {
   const data = await spotifyRequest(
-    `/me/top/tracks?limit=${limit}&time_range=${timeRange}`
+    `/me/top/tracks?limit=${limit}&time_range=${timeRange}`,
+    clientId,
+    clientSecret
   );
   return data;
 }
