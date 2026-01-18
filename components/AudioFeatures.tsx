@@ -10,16 +10,18 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { AudioFeaturesStats } from '@/lib/transformers';
 
 interface AudioFeaturesProps {
-  initialData?: AudioFeaturesStats;
+  initialData?: AudioFeaturesStats | any;
 }
 
 export default function AudioFeatures({ initialData }: AudioFeaturesProps) {
-  const [data, setData] = useState<AudioFeaturesStats | null>(initialData || null);
+  const [data, setData] = useState<AudioFeaturesStats | null>(
+    initialData && typeof initialData === 'object' && 'energy' in initialData ? initialData : null
+  );
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialData) {
+    if (initialData && typeof initialData === 'object' && 'energy' in initialData) {
       setData(initialData);
       setLoading(false);
       return;
@@ -30,16 +32,24 @@ export default function AudioFeatures({ initialData }: AudioFeaturesProps) {
         setLoading(true);
         setError(null);
 
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-        const response = await fetch(`${baseUrl}/api/music/audio-features`);
+        const headers: HeadersInit = {};
+        const clientId = typeof window !== 'undefined' ? localStorage.getItem('spotify_client_id') : null;
+        const clientSecret = typeof window !== 'undefined' ? localStorage.getItem('spotify_client_secret') : null;
+        if (clientId) headers['X-Spotify-Client-Id'] = clientId;
+        if (clientSecret) headers['X-Spotify-Client-Secret'] = clientSecret;
+
+        const baseUrl = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/music/audio-features`, { headers });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch audio features');
+          throw new Error(`Failed to fetch audio features: ${response.status}`);
         }
 
         const result = await response.json();
-        setData(result.features);
+        console.log('Audio features result:', result);
+        setData(result.features || result);
       } catch (err) {
+        console.error('Audio features fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);
@@ -47,7 +57,7 @@ export default function AudioFeatures({ initialData }: AudioFeaturesProps) {
     };
 
     fetchAudioFeatures();
-  }, []);
+  }, [initialData]);
 
   if (loading) {
     return (

@@ -53,7 +53,10 @@ function DashboardContent() {
         });
         if (genreResponse.ok) {
           const genreResult = await genreResponse.json();
+          console.log('Genre result:', genreResult);
           setGenreData(genreResult.genres || []);
+        } else {
+          console.error('Genre fetch failed:', genreResponse.status);
         }
 
         // Fetch audio features data
@@ -61,7 +64,11 @@ function DashboardContent() {
           headers,
         });
         if (audioResponse.ok) {
-          setAudioFeaturesData(await audioResponse.json());
+          const audioResult = await audioResponse.json();
+          console.log('Audio result:', audioResult);
+          setAudioFeaturesData(audioResult.features || audioResult);
+        } else {
+          console.error('Audio fetch failed:', audioResponse.status);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

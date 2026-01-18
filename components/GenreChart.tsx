@@ -37,7 +37,7 @@ export default function GenreChart({ initialData = [] }: GenreChartProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialData.length > 0) {
+    if (initialData && initialData.length > 0) {
       setData(initialData);
       setLoading(false);
       return;
@@ -48,16 +48,24 @@ export default function GenreChart({ initialData = [] }: GenreChartProps) {
         setLoading(true);
         setError(null);
 
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-        const response = await fetch(`${baseUrl}/api/music/genre-distribution`);
+        const headers: HeadersInit = {};
+        const clientId = typeof window !== 'undefined' ? localStorage.getItem('spotify_client_id') : null;
+        const clientSecret = typeof window !== 'undefined' ? localStorage.getItem('spotify_client_secret') : null;
+        if (clientId) headers['X-Spotify-Client-Id'] = clientId;
+        if (clientSecret) headers['X-Spotify-Client-Secret'] = clientSecret;
+
+        const baseUrl = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/music/genre-distribution`, { headers });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch genre distribution');
+          throw new Error(`Failed to fetch genre distribution: ${response.status}`);
         }
 
         const result = await response.json();
+        console.log('Genre fetch result:', result);
         setData(result.genres || []);
       } catch (err) {
+        console.error('Genre fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);
@@ -65,7 +73,7 @@ export default function GenreChart({ initialData = [] }: GenreChartProps) {
     };
 
     fetchGenres();
-  }, []);
+  }, [initialData]);
 
   if (loading) {
     return (
